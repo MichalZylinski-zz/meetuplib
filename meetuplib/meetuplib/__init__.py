@@ -1,10 +1,10 @@
-from urllib2 import urlopen
+﻿from urllib2 import urlopen
 from urllib import urlencode
-import json
+from json import load
 from datetime import datetime
 
 PAGE = 200
-HTTP_DEBUG = False
+HTTP_DEBUG = True
 
 class EventStatus:
     Upcoming = "upcoming"
@@ -33,7 +33,7 @@ class MeetupClient:
             print url
 
         response = urlopen(url)
-        jsonResponse = json.load(response)
+        jsonResponse = load(response)
         return jsonResponse['results']
 
     def findMembersByGroup(self, groupName=None, groupId=None):
@@ -86,17 +86,21 @@ class MeetupClient:
             events.append(MeetupEvent(event, self))
         return events
 
-
 def convertTimestamp(timestamp):
     return datetime.utcfromtimestamp(timestamp/1000)
 
-class MeetupMetaObject:
+class MeetupMetaObject(object):
     def __init__(self, dictionary, client):
         self._json_dictionary = dictionary
         self._mClient = client
 
     def __getattr__(self, name):
-        return self._json_dictionary.get(name)
+        try:
+            return self._json_dictionary[name]
+        except:
+            raise AttributeError
+
+
 
 class MeetupEvent(MeetupMetaObject):
     def __getattr__(self, name):
@@ -111,6 +115,7 @@ class MeetupMember(MeetupMetaObject):
             return convertTimestamp(self._json_dictionary['joined'])
         else:
             return MeetupMetaObject.__getattr__(self, name)
+
 class MeetupGroup(MeetupMetaObject):
     def __getattr__(self, name):
         if name == 'created':
@@ -120,7 +125,7 @@ class MeetupGroup(MeetupMetaObject):
         elif name == 'events':
             return self._mClient.findEventsByGroup(groupId=self._json_dictionary['id'])
         else:
-            return self._json_dictionary.get(name)
+            return MeetupMetaObject.__getattr__(self, name)
 
 
 

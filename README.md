@@ -35,3 +35,10 @@ As with events you may easily get information about group members:
 ```python
 firstMember = mclient.findMembersByGroup("LondonOnBoard")[-1].name
 ```
+
+##Release notes
+
+### 0.25
+* Fixed paging in findEventsByGroup() method
+* Added proper object discovery (ie. dir(MeetupGroup))
+* Added docstrings to MeetupClient public methods
